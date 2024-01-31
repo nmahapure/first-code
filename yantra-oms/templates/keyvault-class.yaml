@@ -1,0 +1,32 @@
+#https://learn.microsoft.com/en-us/azure/openshift/howto-use-key-vault-secrets
+{{- range $keyvaultsEnvVarProfile := $.Values.keyvaultProfiles }}
+    {{- range $keyvault := $keyvaultsEnvVarProfile.keyvalues }}
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: "{{ $keyvault.key }}-class"
+  namespace: {{ $.Values.namespace }}
+spec:
+  provider: azure
+  secretObjects:
+    - secretName: "{{ $keyvault.key }}-secret"
+      type: Opaque
+      data:
+      - objectName: {{ $keyvault.key }}
+        key: "{{ $keyvault.key }}"
+  parameters:
+    keyvaultName: "{{ $.Values.properties.keyvault.keyvaultNameServer }}"
+    tenantId: "{{ $.Values.properties.keyvault.keyvaultTenantID }}"
+    usePodIdentity: "false"
+    useVMManagedIdentity: "false"
+    cloudName: ""
+    objects: |
+      array:
+        - |
+          objectName: "{{ $keyvault.key }}"
+          secretKey: "{{ $keyvault.key }}"
+          objectType: "secret"
+
+---
+    {{- end }}
+{{- end }} 

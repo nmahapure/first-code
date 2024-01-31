@@ -1,0 +1,32 @@
+{{- if $.Values.properties.autoscaling.enabled }}
+  {{- range $apps := .Values.apps }}
+    {{- if not $apps.autoscalingDisabled }}
+      {{- $appname := $apps.name| trunc 63 | trimSuffix "-" -}}
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $appname }}
+  labels:
+    app.kubernetes.io/instance: {{ $appname }}
+    app.kubernetes.io/name: {{ $appname }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment 
+    name:  {{  $appname }} 
+  minReplicas: {{ $.Values.properties.autoscaling.minReplicas }}
+  maxReplicas: {{ $.Values.properties.autoscaling.maxReplicas }}
+  metrics: 
+  - type: Resource
+    resource:
+      name: cpu 
+      target:
+        averageUtilization: {{ $.Values.properties.autoscaling.triggerNewPodCPUUtilizationPercentage }}
+        type: Utilization
+
+
+---  
+    {{- end }}
+  {{- end }}
+{{- end }}

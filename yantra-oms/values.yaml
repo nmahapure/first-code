@@ -1,0 +1,447 @@
+namespace: meijer-dev 
+external_dns: yantra-dev.apps.l1pfrf5v.eastus.aroapp.io
+imagePullSecrets: acr-secret-scoperetail
+acr_url: scoperetail.azurecr.io
+helm_name: yantra-oms
+helm_version: "1.1.16" 
+   
+apps:
+  - name: common-ccm-app
+    image: common-ccm-app
+    version: "0.5"
+    ingresspath: /config
+    configMap: common-ccm-app
+    keyvaultProfiles:
+      - name: key-vault
+    volumes:
+      - name: azure
+
+  # - name: yantra-cop-fusion
+  #   image: fusion-host
+  #   version: "0.33"
+  #   ingresspath: /api/fusion
+  #   configMaps: 
+  #     - name: common-app-config
+  #     - name: yantra-fusion-host-app-config
+  #   volumes:
+  #     - name: fusion-host
+  #     - name: azure
+  
+  - name: yantra-fusion-asb-msg-handler
+    image: fusion-host 	
+    version: "0.33"
+    ingresspath: /api/asb
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-fusion-asb-msg-handler-app-config
+    volumes:
+      - name: fusion-host
+      - name: azure
+  
+  
+  - name: yantra-fusion-cmd-handler
+    image: fusion-host
+    version: "0.33"
+    ingresspath: /api/cmd
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-fusion-cmd-handler-app-config
+    volumes:
+      - name: fusion-host
+      - name: azure
+
+  - name: yantra-fusion-kafka-msg-handler
+    image: fusion-host
+    version: "0.33"
+    ingresspath: /api/kafka
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-fusion-kafka-msg-handler-app-config
+    volumes:
+      - name: fusion-host
+      - name: azure 
+    
+  - name: yantra-ginti-web
+    image: ginti-web
+    version: "0.6"
+    ingresspath: /api/ginti/cmd
+    keyvaultProfiles:
+      - name: mssql-key-vault
+      - name: kafka-key-vault
+    configMap: common-app-config
+
+  - name: yantra-cop-msg-handler
+    image: yantra-cop-msg-handler
+    version: "0.98"
+    ingresspath: /api/cop/msg
+    configMap: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-cop-qry-handler
+    image: yantra-cop-qry-handler
+    version: "0.44"
+    ingresspath: /api/cop/qry
+    configMap: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-event-tracker-msg-handler
+    image: yantra-event-tracker-msg-handler
+    version: "0.12"
+    ingresspath: /api/eventtracr/msg
+    configMap: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-event-tracker-qry-handler
+    image: yantra-event-tracker-qry-handler
+    version: "0.11"
+    ingresspath: /api/eventtracr/qry
+    keyvaultProfiles:
+      - name: mssql-key-vault
+    configMap: common-app-config
+
+  - name: yantra-master-facility-msg-handler
+    image: commons-cassandra-ingestor
+    version: "0.8"
+    ingresspath: /api/fctymast/msg
+    configMaps:
+      - name: common-app-config 
+      - name: yantra-master-facility-msg-handler-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-master-inv-msg-handler
+    image: commons-cassandra-ingestor
+    version: "0.8"
+    ingresspath: /api/inv/msg
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-master-inv-msg-handler-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-master-price-msg-handler
+    image: commons-cassandra-ingestor
+    version: "0.8"
+    ingresspath: /api/price/msg
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-master-price-msg-handler-app-config
+    volumes:
+      - name: azure
+      
+  - name: yantra-master-product-msg-handler
+    image: commons-cassandra-ingestor
+    version: "0.8"
+    ingresspath: /api/prdmast/msg
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-master-product-msg-handler-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-master-product2-msg-handler
+    image: commons-cassandra-ingestor
+    version: "0.8"
+    ingresspath: /api/prdmast2/msg
+    configMaps: 
+      - name: common-app-config
+      - name: yantra-master-product2-msg-handler-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-master-facility-qry-handler
+    image: yantra-master-facility-qry-handler
+    version: "0.9"
+    ingresspath: /api/fctymast/qry
+    configMaps:
+      - name: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-master-product-facility-qry-handler
+    image: yantra-master-product-facility-qry-handler
+    version: "0.10"
+    ingresspath: /api/prdfctymast/qry
+    configMaps:
+      - name: common-app-config	
+    volumes:
+      - name: azure
+
+  - name: yantra-master-product-qry-handler
+    image: yantra-master-product-qry-handler
+    version: "0.7"
+    ingresspath: /api/prdmast/qry
+    configMaps:
+      - name: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-master-read-utility
+    image: yantra-master-read-utility
+    version: "0.24.3"
+    ingresspath: /api/master/read
+    configMaps:
+      - name: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-preorder-qry-handler
+    image: yantra-preorder-qry-handler
+    version: "0.24"
+    ingresspath: /api/preorder/qry
+    configMaps:
+      - name: common-app-config
+
+  - name: yantra-resources
+    image: yantra-resources
+    version: "0.95"
+    ingresspath: /api/yan/res
+    configMaps:
+      - name: common-app-config
+      - name: yantra-resources-app-config
+
+  - name: yantra-sop-msg-handler
+    image: yantra-sop-msg-handler
+    version: "0.76"
+    ingresspath: /api/sop/msg
+
+    configMaps:
+      - name: common-app-config
+    volumes:
+      - name: azure
+
+  - name: yantra-sop-qry-handler
+    image: yantra-sop-qry-handler
+    version: "0.22"
+    ingresspath: /api/sop/qry
+    configMaps:
+      - name: common-app-config
+
+  - name: yantra-sos-request-handler
+    image: yantra-sos-request-handler
+    version: "0.6"
+    ingresspath: /api/sos/cmd
+    configMaps:
+      - name: common-app-config
+
+  - name: yantra-xsequencer-msg-handler
+    image: yantra-xsequencer-msg-handler
+    version: "0.84"
+    ingresspath: /api/xseq/msg
+    configMaps:
+      - name: common-app-config
+    volumes:	
+      - name: azure
+
+  - name: yantra-xsequencer-scheduler
+    image: yantra-xsequencer-scheduler
+    version: "0.9"
+    ingresspath: /api/xseq/sched
+    configMaps:
+      - name: common-app-config
+      #- name: yantra-dependancy-checker-config 
+    volumes:	
+      - name: azure
+    
+  - name: yantra-web-app
+    image: yantra-web-app
+    version: "1.90"
+    ingresspath: /
+    routeDisabled: true
+    configMaps:
+      - name: common-app-config
+      - name: yantra-web-app-config
+
+  - name: yantra-sso-web-app
+    image: sso-web-app
+    version: "0.3.14"      
+    routes:
+      - pathRoute: /login  
+      - pathRoute: /login/azureAdRedirect
+      - pathRoute: /logout
+      - pathRoute: /
+    podSecurityContext:
+      fsGroup: 33
+      runAsNonRoot: true
+      runAsUser: 33
+      runAsGroup: 33
+      fsGroupChangePolicy: "OnRootMismatch"
+    configMaps:
+      - name: yantra-sso-app-config
+            
+keyvaultProfiles:
+  - name: key-vault
+    keyvalues:
+     - key: azure-client-id
+       envVar: AZURE_CLIENT_ID
+     - key: azure-client-secret
+       envVar: AZURE_CLIENT_SECRET
+     - key: azure-tenant-id
+       envVar: AZURE_TENANT_ID
+     - key: keyvault-endpoint
+       envVar: KEYVAULT_ENDPOINT
+     - key: encrypt-key
+       envVar: ENCRYPT_KEY
+     - key: sql-oms-digital-userid
+       envVar: DATABASE_USR
+     - key: sql-oms-digital-password
+       envVar: DATABASE_PWD
+     - key: oms-internal-kafka-api-key-id
+       envVar: KAFKA_USR
+     - key: oms-internal-kafka-api-key-secret
+       envVar: KAFKA_PWD
+     - key: stea2omsorder-primary-key
+       envVar: AZURE_STORAGE_ACCOUNT_KEY
+     - key: oms-product-catalog-ea2-blob-sas-token
+       envVar: AZURE_STORAGE_SECURITY_PARAM
+     - key: cassandra-oms-digital-userid
+       envVar: CASSANDRA_USR
+     - key: cassandra-oms-digital-password
+       envVar: CASSANDRA_PWD
+     - key: servicebus-orderoms-accesskey
+       envVar: SERVICE_BUS_SHARED_ACCESS_KEY
+     - key: oms-apim-subscription-key
+       envVar: OMS_APIM_SUBSCRIPTION_KEY
+     - key: cipher-secret-encryption-key
+       envVar: CIPHER_SECRET_ENCRYPTION_KEY
+     
+  
+    
+configMaps:
+  - name: common-ccm-app
+    envVars:
+      D_PORT_MSSQL: yantra-io.database.windows.net:1433
+      SPRING_PROFILE_ACTIVE: docker,jdbc
+      LIQUIBASE_ENABLED: "false"
+      DATABASE_DRIVER: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      DATABASE_SCHEMA: OMSCONFIG
+      DATABASE_URL: jdbc:sqlserver://yantra-io.database.windows.net:1433;database=yantra-dev1;encrypt=true;trustServerCertificate=true;sslProtocol=TLSv1.2;
+      
+  - name: common-app-config
+    envVars:
+      D_HTTP_CCM: http://common-ccm-app/config/default/default
+      CCM_URL: http://common-ccm-app/config
+      CCM_PROFILE: scope,scope_dev
+      LOG4J_FILE_URL: http://yantra-resources/api/yan/res/log4j2.xml  
+      JAVA_APP_OPTS: "-XX:MinRAMPercentage=50.0 -XX:MaxRAMPercentage=90.0 -XshowSettings:vm"
+      
+
+  - name: yantra-resources-app-config
+    envVars:
+      APP_NAME: yantra-resources
+
+  - name: yantra-master-facility-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-master-facility-msg-handler
+
+  - name: yantra-master-inv-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-master-inv-msg-handler
+
+  - name: yantra-master-price-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-master-price-msg-handler
+
+  - name: yantra-master-product-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-master-product-msg-handler
+
+  - name: yantra-master-product2-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-master-product2-msg-handler
+
+  - name: yantra-fusion-asb-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-fusion-asb-msg-handler
+      RESOURCE_DIRECTORY: appl/resources
+
+  - name: yantra-fusion-cmd-handler-app-config
+    envVars:
+      APP_NAME: yantra-fusion-cmd-handler
+      RESOURCE_DIRECTORY: appl/resources
+
+  - name: yantra-fusion-kafka-msg-handler-app-config
+    envVars:
+      APP_NAME: yantra-fusion-kafka-msg-handler
+      RESOURCE_DIRECTORY: appl/resources
+
+  - name: yantra-web-app-config
+    envVars:
+      BACKEND_URL: yantra-dev.apps.l1pfrf5v.eastus.aroapp.io
+
+  # - name: yantra-dependancy-checker-config
+  #   envVars:
+  #     D_HTTP_ DEPEN: http://yantra-resources/api/yan/res/log4j2.xml
+
+  - name: yantra-sso-app-config
+    envVars:
+      SAMLOROAUTH: OAUTH
+      DOMAIN_DNS: yantra-dev.apps.l1pfrf5v.eastus.aroapp.io
+      DOMAIN_PORT: "8080"
+      DOMAIN_SSL_ENABLED: "FALSE"
+      BACKEND_UI_URL: http://yantra-web-app/
+      FRONTEND_UI_CONTEXT: /
+      FRONTEND_MAIN_URL: https://yantra-dev.apps.l1pfrf5v.eastus.aroapp.io
+      OIDC_PROVIDER_METADATA_URL: https://login.microsoftonline.com/cc685402-50b2-478d-bd27-3cf601b45235/.well-known/openid-configuration 
+      OIDC_REDIRECT_LOGOUT_URI: https://yantra-dev.apps.l1pfrf5v.eastus.aroapp.io/login
+      OIDC_REDIRECT_URI: https://yantra-dev.apps.l1pfrf5v.eastus.aroapp.io/login/azureAdRedirect
+      OIDC_CLIENTID: bce9be7e-2653-4acd-874f-75f2a2ec8dc9
+      OIDC_OIDC_RESPONSE_TYPE: id_token
+      OIDC_CLIENT_SECRET: ts-8Q~kOCqlHbFBLJMqYb3EsDZJ2CYZWJDCOlcWq
+      OIDC_CRYPTOPASSPHRASE: ZBVT5bgtwzA4RKcGPz69wvWVtBj8dzwV
+      OIDC_REMOTE_USER_CLAIM: email
+      OIDC_SCOPE: api://yantra-backend-apis
+      COOKIE_OIDC_CLAIM_name: name
+      COOKIE_OIDC_CLAIM_email: email
+      COOKIE_OIDC_CLAIM_given_name: role
+      COOKIE_OIDC_access_token: token
+      OIDC_SESSION_INACTIVITY_TIMEOUT: "3600"
+      OIDC_SESSION_MAX_DURATION: "0"
+      OIDC_X_Forwarded_Headers: X-Forwarded-Proto
+      
+properties:
+  keyvault:
+    keyvaultSecreteStore: secrets-store-creds  #created with oc command
+    keyvaultNameServer: keyvault4906  #name of azure keyvault
+    keyvaultTenantID: cc685402-50b2-478d-bd27-3cf601b45235 #Tenant ID of the AD
+  replicaCount: 1
+  nameOverride: ""
+  fullnameOverride: ""
+  
+      
+  volumes:
+    - name: azure
+      mountPath: /appl/ca
+      content:
+        persistentVolumeClaim:
+          claimName: azurefile
+    - name: fusion-host
+      mountPath: /appl/resources
+      content:
+        emptyDir: {}
+      
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  resources:
+    requests:
+      cpu: 400m
+      memory: 600Mi 
+    limits:
+      cpu: 400m
+      memory: 600Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    triggerNewPodCPUUtilizationPercentage: 80

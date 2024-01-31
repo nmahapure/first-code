@@ -1,0 +1,35 @@
+
+{{- $labels := (include "yantra-oms.labels" .) -}}
+{{- $selectorLabels := (include "yantra-oms.selectorLabels" .) -}}
+{{- range $apps := .Values.apps }}
+{{- $appname := $apps.name| trunc 63 | trimSuffix "-" -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ $appname }}"
+  labels:
+    app.kubernetes.io/instance: {{ $appname }}
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: {{ $appname }}
+    app.kubernetes.io/version: {{ $.Values.helm_version | quote }}
+    helm.sh/chart: "{{ $.Values.helm_name }}-{{ $.Values.helm_version }}"
+  annotations:
+    meta.helm.sh/release-name: {{ $.Values.helm_name | quote }}
+    meta.helm.sh/release-namespace: {{ $.Values.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/instance: {{ $appname }}
+    app.kubernetes.io/name: {{ $appname }}
+
+
+
+
+
+---
+{{- end }}

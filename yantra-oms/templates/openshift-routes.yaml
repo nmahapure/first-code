@@ -1,0 +1,51 @@
+{{- range $apps := .Values.apps }}
+{{- if not $apps.routeDisabled }}
+{{- $appname := $apps.name| trunc 63 | trimSuffix "-" -}}
+{{- with $apps.ingresspath -}}
+  {{- $approutes := $apps.ingresspath -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: "{{ $appname }}-route"
+  namespace: {{ $.Values.namespace }}
+spec:
+  host: {{ $.Values.external_dns }}
+  path: {{ $approutes }}
+  to:
+    kind: Service
+    name: {{ $appname }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
+  
+---
+{{- else -}}
+
+{{- range $appRoute := $apps.routes }}
+{{- $appRoutePath := $appRoute.pathRoute| trunc 63 | replace "/" "" -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: "{{ $appname }}-r{{ lower $appRoutePath }}-route"
+  namespace: {{ $.Values.namespace }}
+spec:
+  host: {{ $.Values.external_dns }}
+  path: {{ $appRoute.pathRoute }}
+  to:
+    kind: Service
+    name: {{ $appname }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
+  
+---
+{{- end -}}
+{{- end }}
+{{- end }}
+{{- end }}

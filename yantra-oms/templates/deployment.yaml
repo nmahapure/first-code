@@ -1,0 +1,158 @@
+{{- range $apps := .Values.apps }}
+{{- $appname := $apps.name| trunc 63 | trimSuffix "-" -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $appname }}
+  labels:
+    app.kubernetes.io/instance: {{ $appname }}
+    app.kubernetes.io/name: {{ $appname }}
+spec:
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $appname }}
+      app.kubernetes.io/name: {{ $appname }}
+  template:
+    metadata:
+      {{- with $.Values.properties.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/instance: {{ $appname }}
+        app.kubernetes.io/name: {{ $appname }}
+    spec:
+      imagePullSecrets: 
+        - name: {{ $.Values.imagePullSecrets }}
+      serviceAccountName: {{ include "yantra-oms.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml $apps.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ $apps.name }}
+          securityContext:
+            {{- toYaml $.Values.properties.securityContext | nindent 12 }}
+          image: "{{ $.Values.acr_url}}/{{ $apps.image }}:{{ $apps.version }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            {{- with  $apps.configMap }}
+            - configMapRef:
+                name: {{ $apps.configMap }}
+            {{- end }}
+            {{- with  $apps.configMaps }}    
+              {{- range $configMap := $apps.configMaps }}
+            - configMapRef:
+                name: {{ $configMap.name }}
+              {{- end }}
+            {{- end }}
+            
+          env:
+          {{- with  $apps.keyvaultProfiles }}
+            {{- range $appKvP := $apps.keyvaultProfiles }}  
+              {{- range $keyvaultsEnvVarProfile := $.Values.keyvaultProfiles }}
+                {{- if eq $keyvaultsEnvVarProfile.name $appKvP.name }}
+                  {{- range $keyvault := $keyvaultsEnvVarProfile.keyvalues}}
+            - name: {{$keyvault.envVar}}
+              valueFrom: 
+                secretKeyRef:
+                   name: "{{ $keyvault.key }}-secret"
+                   key: "{{ $keyvault.key }}"
+                  {{- end }} 
+                {{- end }}    
+              {{- end }}
+            {{- end }}
+          {{- end }}  
+          
+          volumeMounts:
+            {{- range $appBinaryConfigMap := $apps.binaryConfigMaps }}
+              {{- range $binaryConfigMap := $.Values.binaryConfigMaps }}
+                {{- if eq $binaryConfigMap.name $appBinaryConfigMap.name }}
+            - name: {{ $binaryConfigMap.name }}
+              mountPath: {{ $binaryConfigMap.mountPath }}
+                {{- end }}
+              {{- end }}
+            {{- end }}
+
+            {{- range $volumeApp := $apps.volumes }} 
+              {{- range $volumeValues := $.Values.properties.volumes }}
+                {{- if eq $volumeApp.name $volumeValues.name }} 
+            - name: {{ $volumeApp.name }}
+              mountPath: {{ $volumeValues.mountPath | quote }}
+                {{- end}}
+              {{- end}}
+            {{- end}}
+       
+            
+            {{- range $appKvP := $apps.keyvaultProfiles }}  
+              {{- range $keyvaultsEnvVarProfile := $.Values.keyvaultProfiles }}
+                {{- if eq $keyvaultsEnvVarProfile.name $appKvP.name }}
+                  {{- range $keyvault := $keyvaultsEnvVarProfile.keyvalues}}  
+            - name: "{{ $keyvault.key }}-inline"
+              mountPath: "/appl/keyvault/{{ $keyvault.key }}-dir"
+              readOnly: true
+                  {{- end}}
+                {{- end}}
+              {{- end}}
+            {{- end}}
+          
+          resources:
+            {{- with  $apps.resources }}
+              {{- toYaml $apps.resources | nindent 12 }}
+            {{- else -}}
+              {{- toYaml $.Values.properties.resources | nindent 12 }}
+            {{- end}}
+      {{- with $.Values.properties.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.properties.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.properties.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # {{- with $.Values.properties.hostAliases }}
+      # hostAliases:
+      #   {{- toYaml . | nindent 8 }}
+      # {{- end }}
+      volumes:
+        {{- range $appBinaryConfigMap := $apps.binaryConfigMaps }}
+        - name: {{ $appBinaryConfigMap.name }}
+          configMap:
+            name: {{ $appBinaryConfigMap.name }}
+        {{- end }}
+        
+        {{- range $volumeApp := $apps.volumes }} 
+          {{- range $volumeValues := $.Values.properties.volumes }}
+            {{- if eq $volumeApp.name $volumeValues.name }}
+        - name: {{ $volumeApp.name }} 
+        {{- toYaml $volumeValues.content | nindent 10 }}
+            {{- end }}
+          {{- end }}
+        {{- end }}   
+
+        {{- range $appKvP := $apps.keyvaultProfiles }}  
+          {{- range $keyvaultsEnvVarProfile := $.Values.keyvaultProfiles }}  
+            {{- if eq $keyvaultsEnvVarProfile.name $appKvP.name }}
+              {{- range $keyvault := $keyvaultsEnvVarProfile.keyvalues}}  
+        - name: "{{ $keyvault.key }}-inline" #to map the volume above
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "{{ $keyvault.key}}-class"
+            nodePublishSecretRef:
+              name: {{ $.Values.properties.keyvault.keyvaultSecreteStore }}
+               {{- end}} 
+             {{- end}} 
+           {{- end}}  
+         {{- end}}  
+---
+{{- end }}

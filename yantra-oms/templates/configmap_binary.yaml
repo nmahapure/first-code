@@ -1,0 +1,9 @@
+{{- range $config := $.Values.binaryConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config.name }}
+binaryData:
+  {{$config.filename }}: {{$config.b64File}}
+---
+{{- end }}
