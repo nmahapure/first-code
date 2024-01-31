@@ -134,7 +134,7 @@ apps:
       
   - name: yantra-master-product-msg-handler
     image: commons-cassandra-ingestor
-    version: "0.8"
+    version: "0.9"
     ingresspath: /api/prdmast/msg
     configMaps: 
       - name: common-app-config
